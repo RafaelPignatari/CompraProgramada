@@ -1,0 +1,10 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/kafka_data
+/src/CompraProgramadaWebApp/.vs/CompraProgramadaWebApp/CopilotIndices/18.3.511.5503
+/src/CompraProgramadaWebApp/.vs
+/src/CompraProgramadaWebApp/bin/Debug/net10.0
+/src/CompraProgramadaWebApp/obj
