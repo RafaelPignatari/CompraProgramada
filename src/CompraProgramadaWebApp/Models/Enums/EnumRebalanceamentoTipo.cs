@@ -2,7 +2,7 @@ namespace CompraProgramadaWebApp.Models.Enums
 {
     public enum EnumRebalanceamentoTipo
     {
-        MUDANCA_CESTA,
-        DESVIO
+        MUDANCA_CESTA = 1,
+        DESVIO = 2
     }
 }

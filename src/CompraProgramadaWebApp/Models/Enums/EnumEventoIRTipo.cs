@@ -2,7 +2,7 @@ namespace CompraProgramadaWebApp.Models.Enums
 {
     public enum EnumEventoIRTipo
     {
-        DEDO_DURO,
-        IR_VENDA
+        DEDO_DURO = 1,
+        IR_VENDA = 2
     }
 }

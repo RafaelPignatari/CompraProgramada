@@ -2,7 +2,7 @@ namespace CompraProgramadaWebApp.Models.Enums
 {
     public enum EnumContaTipo
     {
-        MASTER,
-        FILHOTE
+        MASTER = 1,
+        FILHOTE = 2
     }
 }
