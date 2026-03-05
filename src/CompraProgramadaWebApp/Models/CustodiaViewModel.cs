@@ -15,7 +15,7 @@ namespace CompraProgramada.Models
 
         public int Quantidade { get; set; }
 
-        public decimal? PrecoMedio { get; set; }
+        public decimal PrecoMedio { get; set; }
 
         public DateTime? DataUltimaAtualizacao { get; set; }
     }

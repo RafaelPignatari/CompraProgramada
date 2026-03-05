@@ -12,7 +12,7 @@ namespace CompraProgramadaWebApp.Data
         }
 
         public DbSet<ClienteViewModel> Clientes { get; set; } = null!;
-        public DbSet<ContaGraficaViewModel> ContaGraficas { get; set; } = null!;
+        public DbSet<ContasGraficasViewModel> ContaGraficas { get; set; } = null!;
         public DbSet<CestaRecomendacaoViewModel> CestasRecomendacao { get; set; } = null!;
         public DbSet<CotacaoViewModel> Cotacoes { get; set; } = null!;
         public DbSet<CustodiaViewModel> Custodias { get; set; } = null!;

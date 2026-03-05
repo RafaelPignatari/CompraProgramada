@@ -1,10 +1,12 @@
 using CompraProgramadaWebApp.Models.Enums;
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CompraProgramada.Models
 {
-    public class ContaGraficaViewModel
+    [Table("ContasGraficas")]
+    public class ContasGraficasViewModel
     {
         public long Id { get; set; }
 
