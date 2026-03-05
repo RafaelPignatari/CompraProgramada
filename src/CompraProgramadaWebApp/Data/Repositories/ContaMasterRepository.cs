@@ -17,7 +17,7 @@ namespace CompraProgramadaWebApp.Data.Repositories
 
         public async Task<IEnumerable<CustodiaViewModel>> GetCustodiaAsync()
         {
-            return await _context.Custodias.ToListAsync();
+            return await _context.Custodias.Where(c => c.ContaGraficaId == 1).ToListAsync(); //Conta Master tem ContaGraficaId = 1
         }
     }
 }

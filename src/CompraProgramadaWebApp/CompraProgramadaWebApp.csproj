@@ -29,4 +29,8 @@
     <Folder Include="Common\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="database\seed_master_account.sql" />
+  </ItemGroup>
+
 </Project>

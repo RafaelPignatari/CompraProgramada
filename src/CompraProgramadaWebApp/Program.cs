@@ -53,6 +53,8 @@ builder.Services.AddScoped<CompraProgramadaWebApp.Services.IContaMasterService, 
 builder.Services.AddScoped<CompraProgramadaWebApp.Data.Repositories.IContaGraficaRepository, CompraProgramadaWebApp.Data.Repositories.ContaGraficaRepository>();
 builder.Services.AddScoped<CompraProgramadaWebApp.Data.Repositories.ICustodiaRepository, CompraProgramadaWebApp.Data.Repositories.CustodiaRepository>();
 builder.Services.AddScoped<CompraProgramadaWebApp.Services.IContaGraficaService, CompraProgramadaWebApp.Services.ContaGraficaService>();
+builder.Services.AddScoped<CompraProgramadaWebApp.Data.Repositories.IOrdemRepository, CompraProgramadaWebApp.Data.Repositories.OrdemRepository>();
+builder.Services.AddScoped<CompraProgramadaWebApp.Services.ICompraProgramadaService, CompraProgramadaWebApp.Services.CompraProgramadaService>();
 builder.Services.AddScoped<CompraProgramadaWebApp.Data.Repositories.ICotacaoRepository, CompraProgramadaWebApp.Data.Repositories.CotacaoRepository>();
 builder.Services.AddScoped<CompraProgramadaWebApp.Services.ICotacaoService, CompraProgramadaWebApp.Services.CotacaoService>();
 builder.Services.AddScoped<CompraProgramadaWebApp.Services.ICotacaoImportService, CompraProgramadaWebApp.Services.CotacaoImportService>();

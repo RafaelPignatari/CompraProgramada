@@ -33,6 +33,11 @@ namespace CompraProgramadaWebApp.Data.Repositories
             return await _context.Clientes.CountAsync(c => c.Ativo);
         }
 
+        public async Task<IEnumerable<ClienteViewModel>> GetClientesAtivosAsync()
+        {
+            return await _context.Clientes.Where(c => c.Ativo).ToListAsync();
+        }
+
         public Task SaveChangesAsync()
         {
             return _context.SaveChangesAsync();

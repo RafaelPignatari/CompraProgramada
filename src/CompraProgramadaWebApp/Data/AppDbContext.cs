@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using CompraProgramadaWebApp.Models;
+using CompraProgramadaWebApp.Models.Enums;
 using CompraProgramada.Models;
 
 namespace CompraProgramadaWebApp.Data
@@ -24,6 +25,13 @@ namespace CompraProgramadaWebApp.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // Se o banco já contém valores como string (ENUM), mapear para string evita erros de conversão
+            modelBuilder.Entity<ContasGraficasViewModel>()
+                .Property(e => e.Tipo)
+                .HasConversion<string>()
+                .HasMaxLength(20)
+                .HasColumnType("varchar(20)");
+
             base.OnModelCreating(modelBuilder);
         }
     }

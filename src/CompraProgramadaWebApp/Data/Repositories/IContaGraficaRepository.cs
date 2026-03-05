@@ -7,6 +7,7 @@ namespace CompraProgramadaWebApp.Data.Repositories
     {
         Task AddAsync(ContasGraficasViewModel conta);
         Task<ContasGraficasViewModel?> GetByIdAsync(long id);
+        Task<ContasGraficasViewModel?> GetByClienteIdAsync(long clienteId);
         Task SaveChangesAsync();
     }
 }

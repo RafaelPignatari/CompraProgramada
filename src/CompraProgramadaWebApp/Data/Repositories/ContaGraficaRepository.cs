@@ -23,6 +23,11 @@ namespace CompraProgramadaWebApp.Data.Repositories
             return await _context.ContaGraficas.FindAsync(id);
         }
 
+        public async Task<ContasGraficasViewModel?> GetByClienteIdAsync(long clienteId)
+        {
+            return await _context.ContaGraficas.FirstOrDefaultAsync(c => c.ClienteId == clienteId);
+        }
+
         public Task SaveChangesAsync()
         {
             return _context.SaveChangesAsync();
