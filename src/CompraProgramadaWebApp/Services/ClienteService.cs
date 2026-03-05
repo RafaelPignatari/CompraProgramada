@@ -82,5 +82,10 @@ namespace CompraProgramadaWebApp.Services
         {
             return _repo.GetByIdAsync(clienteId);
         }
+
+        public async Task<int> GetQtdClientesAtivosAsync()
+        {
+            return await _repo.GetQtdClientesAtivosAsync();
+        }
     }
 }

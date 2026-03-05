@@ -28,6 +28,11 @@ namespace CompraProgramadaWebApp.Data.Repositories
             return await _context.Clientes.FindAsync(id);
         }
 
+        public async Task<int> GetQtdClientesAtivosAsync()
+        {
+            return await _context.Clientes.CountAsync(c => c.Ativo);
+        }
+
         public Task SaveChangesAsync()
         {
             return _context.SaveChangesAsync();

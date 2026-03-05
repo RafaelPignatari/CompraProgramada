@@ -23,6 +23,9 @@ namespace CompraProgramadaWebApp.Helpers
             public const string CESTA_NAO_ENCONTRADA = "Cesta não encontrada.";
             public const string CLIENTE_JA_INATIVO = "Cliente já inativo.";
 
+            public const string PRIMEIRA_CESTA_CADASTRADA = "Primeira cesta cadastrada com sucesso.";
+            public const string CESTA_ATUALIZADA = "Cesta atualizada. Rebalanceamento disparado para {0} clientes ativos.";
+
             public const string ERRO_GENERICO = "A API não pôde processar a solicitação. Por favor, cheque os parâmetros na documentação.";
         }
     }

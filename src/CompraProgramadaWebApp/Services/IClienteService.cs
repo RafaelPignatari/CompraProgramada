@@ -10,5 +10,6 @@ namespace CompraProgramadaWebApp.Services
         Task<ClienteViewModel?> SaidaAsync(long clienteId);
         Task<AlteracaoResponseDTO?> AlterarValorMensalAsync(long clienteId, decimal novoValor);
         Task<ClienteViewModel?> GetByIdAsync(long clienteId);
+        Task<int> GetQtdClientesAtivosAsync();
     }
 }

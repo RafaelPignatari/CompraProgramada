@@ -40,6 +40,11 @@ namespace CompraProgramadaWebApp.Data.Repositories
             return await _context.CestasRecomendacao.OrderByDescending(c => c.DataCriacao).ToListAsync();
         }
 
+        public async Task<IEnumerable<ItemCestaViewModel>> GetItensByCestaIdAsync(long cestaId)
+        {
+            return await _context.ItemCestas.Where(i => i.CestaId == cestaId).ToListAsync();
+        }
+
         public Task SaveChangesAsync()
         {
             return _context.SaveChangesAsync();

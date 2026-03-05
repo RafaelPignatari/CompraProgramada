@@ -82,7 +82,7 @@ namespace CompraProgramadaWebApp.Controllers.Api
             }
             catch (InvalidOperationException ex) when (ex.Message == Constantes.CLIENTE_NAO_ENCONTRADO)
             {
-                return BadRequest(new { erro = Constantes.Mensagens.CLIENTE_NAO_ENCONTRADO, codigo = Constantes.CLIENTE_NAO_ENCONTRADO });
+                return NotFound(new { erro = Constantes.Mensagens.CLIENTE_NAO_ENCONTRADO, codigo = Constantes.CLIENTE_NAO_ENCONTRADO });
             }
             catch (InvalidOperationException ex) when (ex.Message == Constantes.VALOR_MENSAL_INVALIDO)
             {
