@@ -22,8 +22,8 @@ namespace CompraProgramadaWebApp.Controllers.Api
         {
             try
             {
-                var totalOrdens = await _service.ExecutarAsync(data);
-                return Ok(new { ordensGeradas = totalOrdens });
+                var result = await _service.ExecutarAsync(data);
+                return Ok(result);
             }
             catch (InvalidOperationException ex) when (ex.Message == Constantes.CESTA_NAO_ENCONTRADA)
             {

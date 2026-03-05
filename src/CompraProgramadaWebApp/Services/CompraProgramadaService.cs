@@ -34,13 +34,13 @@ namespace CompraProgramadaWebApp.Services
             _custodiaRepo = custodiaRepo;
         }
 
-        public async Task<int> ExecutarAsync(DateTime? dataExecucao = null)
+        public async Task<CompraProgramadaResultDTO> ExecutarAsync(DateTime? dataRecebida = null)
         {
-            dataExecucao = ValidaDataExecucao(dataExecucao);
+            var dataExecucao = ValidaDataExecucao(dataRecebida);
 
             var (clientes, totalConsolidado) = await GetClientesEConsolidadoAsync();
             if (totalConsolidado <= 0)
-                return 0;
+                return new CompraProgramadaResultDTO { DataExecucao = dataExecucao, TotalClientes = clientes.Count, TotalConsolidado = totalConsolidado, Mensagem = "Nenhum aporte a processar." };
 
             var cesta = await _cestaService.GetAtualAsync();
             if (cesta == null || cesta.Itens == null)
@@ -55,10 +55,10 @@ namespace CompraProgramadaWebApp.Services
             var custodia = (await _contaMasterRepo.GetCustodiaAsync()).ToList();
             var residuos = custodia.ToDictionary(c => c.Ticker.Trim(), c => c.Quantidade);
 
-            var (ordens, statusTickers) = ProcessaOrdens(ativos, precosTicker, residuos, totalConsolidado, dataExecucao.Value);
+            var (ordens, statusTickers) = ProcessaOrdens(ativos, precosTicker, residuos, totalConsolidado, dataExecucao);
 
             if (ordens.Count == 0 && statusTickers.Count == 0)
-                return 0;
+                return new CompraProgramadaResultDTO { DataExecucao = dataExecucao, TotalClientes = clientes.Count, TotalConsolidado = totalConsolidado, Mensagem = "Nenhuma ordem gerada." };
 
             if (ordens.Count > 0)
             {
@@ -66,9 +66,52 @@ namespace CompraProgramadaWebApp.Services
                 await _ordemRepo.SaveChangesAsync();
             }
 
-            await DistribuirParaContasAsync(statusTickers, clientes, totalConsolidado, dataExecucao.Value);
+            var distribuicaoResult = await DistribuirParaContasAsync(statusTickers, clientes, totalConsolidado, dataExecucao);
 
-            return ordens.Count;
+            // Montar DTO de retorno conforme exemplos
+            var retorno = new CompraProgramadaResultDTO
+            {
+                DataExecucao = dataExecucao,
+                TotalClientes = clientes.Count,
+                TotalConsolidado = totalConsolidado,
+                EventosIRPublicados = distribuicaoResult.EventosIRPublicados,
+                Mensagem = $"Compra programada executada com sucesso para {clientes.Count} clientes."
+            };
+
+            // Ordens agrupadas por ticker base
+            var ordensPorBase = ordens
+                .GroupBy(o => o.Ticker.EndsWith("F") ? o.Ticker.Substring(0, o.Ticker.Length - 1) : o.Ticker)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            foreach (var kv in statusTickers)
+            {
+                var ticker = kv.Key;
+                var detalhes = kv.Value;
+                var dtoOrdem = new OrdemCompraDTO
+                {
+                    Ticker = ticker,
+                    QuantidadeTotal = detalhes.QuantidadeComprada + detalhes.ResiduoUsado,
+                    PrecoUnitario = detalhes.Preco,
+                    ValorTotal = (detalhes.QuantidadeComprada + detalhes.ResiduoUsado) * detalhes.Preco
+                };
+
+                if (ordensPorBase.TryGetValue(ticker, out var listaOrdens))
+                {
+                    foreach (var o in listaOrdens)
+                    {
+                        var tipo = o.TipoMercado == EnumTipoMercado.LOTE ? "LOTE" : "FRACIONARIO";
+                        dtoOrdem.Detalhes.Add(new OrdemDetalheDTO { Tipo = tipo, Ticker = o.Ticker, Quantidade = o.Quantidade });
+                    }
+                }
+
+                retorno.OrdensCompra.Add(dtoOrdem);
+            }
+
+            // Distribuições por cliente
+            retorno.Distribuicoes = distribuicaoResult.Distribuicoes;
+            retorno.ResiduosCustMaster = distribuicaoResult.Residuos;
+
+            return retorno;
         }
 
         private DateTime ValidaDataExecucao(DateTime? dataRecebida)
@@ -87,23 +130,22 @@ namespace CompraProgramadaWebApp.Services
             var clientes = (await _clienteRepo.GetClientesAtivosAsync()).ToList();
             var aportes = clientes.Select(c => c.ValorMensal / 3m).ToList();
             var totalConsolidado = aportes.Sum();
-
             return (clientes, totalConsolidado);
         }
 
         private (List<OrdemCompraViewModel> ordens, Dictionary<string, DetalhesTickerDTO> statusTickers) ProcessaOrdens(
                                                     List<ItemCestaResponseDTO>? ativos,
-                                                    Dictionary<string, decimal?> precosTicker,
-                                                    Dictionary<string, int> residuos,
-                                                    decimal totalConsolidado,
-                                                    DateTime execDate)
+            Dictionary<string, decimal?> precosTicker,
+            Dictionary<string, int> residuos,
+            decimal totalConsolidado,
+            DateTime execDate)
         {
             var ordens = new List<OrdemCompraViewModel>();
             var statusTickers = new Dictionary<string, DetalhesTickerDTO>();
 
             foreach (var ativo in ativos)
             {
-                precosTicker.TryGetValue(ativo.Ticker, out var preco);
+                precosTicker.TryGetValue(ativo.Ticker, out decimal? preco);
 
                 if (preco == null || preco <= 0)
                     continue;
@@ -111,7 +153,7 @@ namespace CompraProgramadaWebApp.Services
                 var valorASerGastoAtivo = totalConsolidado * (ativo.Percentual / 100);
                 var quantidadeASerComprada = (int)Math.Floor(valorASerGastoAtivo / preco.Value);
 
-                residuos.TryGetValue(ativo.Ticker, out var qtdResiduoTicker);
+                residuos.TryGetValue(ativo.Ticker, out int qtdResiduoTicker);
                 var residuoUsado = Math.Min(qtdResiduoTicker, quantidadeASerComprada);
                 var quantidadeComprada = Math.Max(quantidadeASerComprada - qtdResiduoTicker, 0);
 
@@ -159,8 +201,12 @@ namespace CompraProgramadaWebApp.Services
             return (ordens, statusTickers);
         }
 
-        private async Task DistribuirParaContasAsync(Dictionary<string, DetalhesTickerDTO> statusTickers, List<ClienteViewModel> clientes, decimal totalConsolidado, DateTime execDate)
+        private async Task<(List<DistribuicaoClienteDTO> Distribuicoes, List<ResiduoDTO> Residuos, int EventosIRPublicados)> DistribuirParaContasAsync(Dictionary<string, DetalhesTickerDTO> statusTickers, List<ClienteViewModel> clientes, decimal totalConsolidado, DateTime execDate)
         {
+            var distribuicoesPorCliente = new Dictionary<long, DistribuicaoClienteDTO>();
+            var residuos = new List<ResiduoDTO>();
+            var eventosIR = 0;
+
             foreach (var statTicker in statusTickers)
             {
                 var ticker = statTicker.Key;
@@ -182,19 +228,31 @@ namespace CompraProgramadaWebApp.Services
                     var aporte = cliente.ValorMensal / 3m;
                     var proporcao = aporte / totalConsolidado;
                     var qtdParaCliente = (int)Math.Floor(totalDisponivel * proporcao);
-
+                    
                     if (qtdParaCliente > 0)
                     {
                         distribuicoes[cliente.Id] = qtdParaCliente;
                         totalDistribuido += qtdParaCliente;
+
+                        if (!distribuicoesPorCliente.TryGetValue(cliente.Id, out var dc))
+                        {
+                            dc = new DistribuicaoClienteDTO { ClienteId = cliente.Id, Nome = cliente.Nome, ValorAporte = cliente.ValorMensal / 3m };
+                            distribuicoesPorCliente[cliente.Id] = dc;
+                        }
+
+                        dc.Ativos.Add(new AtivoDistribuicaoDTO { Ticker = ticker, Quantidade = qtdParaCliente });
                     }
                 }
-
+                
                 await DistribuiParaFilhotes(distribuicoes, ticker, preco, execDate);
-                await DistribuiParaMaster(totalDisponivel, totalDistribuido, ticker, preco, execDate);
+                int qtdResiduoMaster = await DistribuiParaMaster(totalDisponivel, totalDistribuido, ticker, preco, execDate);
 
-                await _custodiaRepo.SaveChangesAsync();               
+                await _custodiaRepo.SaveChangesAsync();
+
+                residuos.Add(new ResiduoDTO { Ticker = ticker, Quantidade = qtdResiduoMaster });
             }
+
+            return (distribuicoesPorCliente.Values.ToList(), residuos, eventosIR);
         }
 
         private async Task DistribuiParaFilhotes(Dictionary<long, int> distribuicoes, string ticker, decimal preco, DateTime execDate)
@@ -246,8 +304,8 @@ namespace CompraProgramadaWebApp.Services
         }
 
         // Atualizar a custódia master com o que sobrou
-        private async Task DistribuiParaMaster(int totalDisponivel, int totalDistribuido, string ticker, decimal preco, DateTime execDate)
-        {            
+        private async Task<int> DistribuiParaMaster(int totalDisponivel, int totalDistribuido, string ticker, decimal preco, DateTime execDate)
+        {
             var masterContaId = 1; // conta master fixa
             var qtdResiduo = totalDisponivel - totalDistribuido;
             var custodiaMaster = await _custodiaRepo.GetByContaAndTickerAsync(masterContaId, (string)ticker);
@@ -272,12 +330,14 @@ namespace CompraProgramadaWebApp.Services
             else
             {
                 custodiaMaster.PrecoMedio = CalculaPrecoMedio(custodiaMaster.Quantidade, custodiaMaster.PrecoMedio, qtdResiduo, preco);
-                custodiaMaster.Quantidade = custodiaMaster.Quantidade + qtdResiduo;                
+                custodiaMaster.Quantidade = custodiaMaster.Quantidade + qtdResiduo;
                 custodiaMaster.DataUltimaAtualizacao = execDate;
 
                 await _custodiaRepo.UpdateAsync(custodiaMaster);
                 await _custodiaRepo.SaveChangesAsync();
             }
+
+            return qtdResiduo;            
         }
 
         private decimal CalculaPrecoMedio(int qtdAnterior, decimal precoMedioAnterior, int qtdNova, decimal precoNovo)

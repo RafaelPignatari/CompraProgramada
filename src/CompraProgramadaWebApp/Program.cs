@@ -7,8 +7,14 @@ using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddControllersWithViews();
+// Add services to the container and configure JSON formatting
+builder.Services.AddControllersWithViews()
+    .AddJsonOptions(opts =>
+    {
+        // Garantir que decimais sejam serializados com 2 casas decimais
+        opts.JsonSerializerOptions.Converters.Add(new CompraProgramadaWebApp.Utils.Json.DecimalTwoPlacesConverter());
+        opts.JsonSerializerOptions.Converters.Add(new CompraProgramadaWebApp.Utils.Json.NullableDecimalTwoPlacesConverter());
+    });
 
 // Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();

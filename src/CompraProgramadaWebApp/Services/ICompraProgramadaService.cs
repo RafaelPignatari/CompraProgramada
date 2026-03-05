@@ -1,3 +1,4 @@
+using CompraProgramadaWebApp.Models.DTOs;
 using System;
 using System.Threading.Tasks;
 
@@ -7,8 +8,8 @@ namespace CompraProgramadaWebApp.Services
     {
         /// <summary>
         /// Executa o motor de compra programada para a data informada (ou hoje se null).
-        /// Retorna o número de ordens geradas.
+        /// Retorna um DTO com detalhes da execução, ordens geradas, distribuições e residuos.
         /// </summary>
-        Task<int> ExecutarAsync(DateTime? dataExecucao = null);
+        Task<CompraProgramadaResultDTO> ExecutarAsync(DateTime? dataExecucao = null);
     }
 }
