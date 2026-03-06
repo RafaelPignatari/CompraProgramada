@@ -14,9 +14,12 @@ namespace CompraProgramadaWebApp.Controllers.Api.Admin
     public class CestaController : ControllerBase
     {
         private readonly ICestaService _service;
-        public CestaController(ICestaService service)
+        private readonly IRebalanceamentoService _rebalanceamentoService;
+
+        public CestaController(ICestaService service, IRebalanceamentoService rebalanceamentoService)
         {
             _service = service;
+            _rebalanceamentoService = rebalanceamentoService;
         }
 
         /// <summary>
@@ -94,6 +97,29 @@ namespace CompraProgramadaWebApp.Controllers.Api.Admin
             {
                 return BadRequest(new { erro = string.Format(Constantes.Mensagens.ERRO_GENERICO) });
             }            
+        }
+
+        /// <summary>
+        /// Dispara o rebalanceamento por desvio de proporção para um cliente específico.
+        /// </summary>
+        /// <param name="clienteId">ID do cliente a ser rebalanceado</param>
+        /// <param name="limiarDesvio">Limiar de desvio em pontos percentuais (padrão: 5)</param>
+        /// <returns>Ok(200) se o rebalanceamento foi disparado com sucesso.</returns>
+        /// <response code="200">Rebalanceamento disparado com sucesso.</response>
+        /// <response code="400">Erro ao processar a requisição.</response>
+        [HttpPost("rebalancear/{clienteId}")]
+        public async Task<IActionResult> RebalancearPorDesvio(long clienteId, [FromQuery] decimal limiarDesvio = 5m)
+        {
+            try
+            {
+                await _rebalanceamentoService.RebalancearPorDesvioAsync(clienteId, limiarDesvio);
+
+                return Ok(new { mensagem = $"Rebalanceamento por desvio disparado para o cliente {clienteId}" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { erro = string.Format(Constantes.Mensagens.ERRO_GENERICO) });
+            }
         }
     }
 }

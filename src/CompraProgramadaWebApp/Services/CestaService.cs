@@ -2,7 +2,6 @@ using CompraProgramada.Models;
 using CompraProgramadaWebApp.Data.Repositories;
 using CompraProgramadaWebApp.Helpers;
 using CompraProgramadaWebApp.Models.DTOs;
-using Microsoft.EntityFrameworkCore;
 
 namespace CompraProgramadaWebApp.Services
 {
@@ -11,12 +10,14 @@ namespace CompraProgramadaWebApp.Services
         private readonly ICestaRepository _repo;
         private readonly IClienteService _clientesService;
         private readonly ICotacaoService _cotacaoService;
+        private readonly IRebalanceamentoService _rebalanceamentoService;
 
-        public CestaService(ICestaRepository repo, IClienteService clienteService, ICotacaoService cotacaoService)
+        public CestaService(ICestaRepository repo, IClienteService clienteService, ICotacaoService cotacaoService, IRebalanceamentoService rebalanceamentoService)
         {
             _repo = repo;
             _clientesService = clienteService;
             _cotacaoService = cotacaoService;
+            _rebalanceamentoService = rebalanceamentoService;
         }
 
         public async Task<CestaResponseDTO> CriarOuAtualizarCestaAsync(CestaRequestDTO cestaDTO)
@@ -34,10 +35,12 @@ namespace CompraProgramadaWebApp.Services
 
             var ativosRemovidos = new List<string>();
             var ativosAdicionados = new List<string>();
+            long? cestaAnteriorId = null;
 
             if (atual != null)
             {
                 retorno.RebalanceamentoDisparado = true;
+                cestaAnteriorId = atual.Id;
 
                 var itensAntigos = (await _repo.GetItensByCestaIdAsync(atual.Id)).Select(i => i.Ticker.Trim()).ToList();
 
@@ -57,9 +60,12 @@ namespace CompraProgramadaWebApp.Services
 
             await _repo.AddAsync(cesta, itens);
 
-            if (retorno.RebalanceamentoDisparado)
+            if (retorno.RebalanceamentoDisparado && cestaAnteriorId.HasValue)
+            {
+                await _rebalanceamentoService.RebalancearPorMudancaDeCestaAsync(cestaAnteriorId.Value, cesta.Id);
                 return await MontaRetornoAtualizacaoCesta(cesta, cestaDTO.Itens, ativosAdicionados, ativosRemovidos);
-            
+            }
+
             retorno = await MontaRetornoCriacaoCesta(cesta, cestaDTO.Itens);
 
             return retorno;

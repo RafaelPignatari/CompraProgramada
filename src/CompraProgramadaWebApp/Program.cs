@@ -64,6 +64,8 @@ builder.Services.AddScoped<CompraProgramadaWebApp.Services.ICompraProgramadaServ
 builder.Services.AddScoped<CompraProgramadaWebApp.Data.Repositories.ICotacaoRepository, CompraProgramadaWebApp.Data.Repositories.CotacaoRepository>();
 builder.Services.AddScoped<CompraProgramadaWebApp.Services.ICotacaoService, CompraProgramadaWebApp.Services.CotacaoService>();
 builder.Services.AddScoped<CompraProgramadaWebApp.Services.ICotacaoImportService, CompraProgramadaWebApp.Services.CotacaoImportService>();
+builder.Services.AddScoped<CompraProgramadaWebApp.Data.Repositories.IRebalanceamentoRepository, CompraProgramadaWebApp.Data.Repositories.RebalanceamentoRepository>();
+builder.Services.AddScoped<CompraProgramadaWebApp.Services.IRebalanceamentoService, CompraProgramadaWebApp.Services.RebalanceamentoService>();
 builder.Services.AddSingleton<CompraProgramadaWebApp.Services.IKafkaProducerService, CompraProgramadaWebApp.Services.KafkaProducerService>();
 
 var app = builder.Build();
