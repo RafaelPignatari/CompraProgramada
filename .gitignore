@@ -9,3 +9,7 @@
 /src/CompraProgramadaWebApp/bin/Debug/net10.0
 /src/CompraProgramadaWebApp/obj
 /src/CompraProgramadaWebApp/Properties
+/tests/CompraProgramada.Tests/bin
+/tests/CompraProgramada.Tests/obj
+/tests/CompraProgramada.Tests/coverage-report
+/tests/CompraProgramada.Tests/TestResults/aa618a3b-ad80-4b43-93b6-92c5cd324f51
