@@ -1,0 +1,89 @@
+@model CompraProgramada.Models.RentabilidadeViewModel
+
+@{
+    ViewData["Title"] = "Rentabilidade";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/rentabilidade.css" asp-append-version="true" />
+}
+
+<div class="rentabilidade-header">
+    <h2 class="mb-0">Carteira do Cliente</h2>
+    <p class="mb-0">Análise de rentabilidade e composição</p>
+</div>
+
+<div class="mb-3">
+    <a class="btn btn-secondary" asp-controller="Rentabilidade" asp-action="Index">« Voltar</a>
+</div>
+
+@if (Model.ClienteId == 0)
+{
+    <div class="alert alert-warning">Cliente não informado.</div>
+}
+else
+{
+    <h4>@Model.ClienteNome</h4>
+
+    <div class="rentabilidade-card">
+        <div class="row">
+            <div class="col-md-3">
+                <small class="text-muted">Valor Investido Total</small>
+                <div class="rentabilidade-valor-destaque">@Model.ValorInvestidoTotal.ToString("C")</div>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted">Valor Atual Total</small>
+                <div class="rentabilidade-valor-destaque">@Model.ValorAtualTotal.ToString("C")</div>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted">P/L Total</small>
+                <div class="rentabilidade-valor-destaque @(Model.PLTotal >= 0 ? "rentabilidade-positivo" : "rentabilidade-negativo")">
+                    @Model.PLTotal.ToString("C")
+                </div>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted">Rentabilidade</small>
+                <div class="rentabilidade-valor-destaque @(Model.RentabilidadePercentual >= 0 ? "rentabilidade-positivo" : "rentabilidade-negativo")">
+                    @Model.RentabilidadePercentual.ToString("F2") %
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.Ativos.Any())
+    {
+        <table class="table table-striped rentabilidade-table">
+            <thead>
+                <tr>
+                    <th>Ativo</th>
+                    <th>Qtd</th>
+                    <th>PM</th>
+                    <th>Cotação</th>
+                    <th>Valor</th>
+                    <th>P/L</th>
+                    <th>%</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach(var a in Model.Ativos)
+            {
+                <tr>
+                    <td><strong>@a.Ticker</strong></td>
+                    <td>@a.Quantidade</td>
+                    <td>@a.PrecoMedio.ToString("C")</td>
+                    <td>@a.CotacaoAtual.ToString("C")</td>
+                    <td>@a.ValorAtual.ToString("C")</td>
+                    <td class="@(a.PL >= 0 ? "rentabilidade-positivo" : "rentabilidade-negativo")">
+                        <strong>@a.PL.ToString("C")</strong>
+                    </td>
+                    <td>@a.ComposicaoPercentual.ToString("F2") %</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="alert alert-info">Nenhum ativo na custódia deste cliente.</div>
+    }
+}

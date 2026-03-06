@@ -9,6 +9,7 @@ namespace CompraProgramadaWebApp.Data.Repositories
         Task<ClienteViewModel?> GetByCpfAsync(string cpf);
         Task<int> GetQtdClientesAtivosAsync();
         Task<IEnumerable<ClienteViewModel>> GetClientesAtivosAsync();
+        Task<IEnumerable<ClienteViewModel>> GetAllClientesAsync();
         Task AddAsync(ClienteViewModel cliente);
         Task UpdateAsync(ClienteViewModel cliente);
         Task SaveChangesAsync();

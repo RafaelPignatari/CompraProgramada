@@ -1,0 +1,67 @@
+/* Itaú Theme - Laranja */
+.rentabilidade-header {
+    background: linear-gradient(135deg, #FF6B00 0%, #FF8C00 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.rentabilidade-card {
+    background: #FFF5E6;
+    border-left: 4px solid #FF6B00;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-radius: 8px;
+}
+
+.rentabilidade-card .card-title {
+    color: #FF6B00;
+    font-weight: bold;
+}
+
+.rentabilidade-table thead {
+    background-color: #FF6B00;
+    color: white;
+}
+
+.rentabilidade-table th {
+    border: none;
+}
+
+.rentabilidade-table tbody tr:hover {
+    background-color: #FFF5E6;
+    cursor: pointer;
+}
+
+.btn-itau {
+    background-color: #FF6B00;
+    color: white;
+    border: none;
+}
+
+.btn-itau:hover {
+    background-color: #FF8C00;
+    color: white;
+}
+
+.badge-itau-ativo {
+    background-color: #28a745;
+}
+
+.badge-itau-inativo {
+    background-color: #6c757d;
+}
+
+.rentabilidade-valor-destaque {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.rentabilidade-positivo {
+    color: #28a745;
+}
+
+.rentabilidade-negativo {
+    color: #dc3545;
+}

@@ -47,8 +47,32 @@ namespace CompraProgramadaWebApp.Services
         private string? GetUltimoArquivo(string pastaCotacoes)
         {
             return Directory.GetFiles(pastaCotacoes, "COTAHIST_D*.TXT")
-                            .OrderByDescending(f => f)
-                            .FirstOrDefault();
+                .Select(f => new
+                {
+                    Caminho = f,
+                    Data = ExtrairData(Path.GetFileNameWithoutExtension(f))
+                })
+                .Where(x => x.Data != null)
+                .OrderByDescending(x => x.Data)
+                .Select(x => x.Caminho)
+                .FirstOrDefault();
+        }
+
+        private DateTime? ExtrairData(string nomeArquivo)
+        {
+            var dataStr = nomeArquivo.Replace("COTAHIST_D", "");
+
+            if (DateTime.TryParseExact(
+                dataStr,
+                "ddMMyyyy",
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None,
+                out var data))
+            {
+                return data;
+            }
+
+            return null;
         }
 
         private async Task<int> ProcessFileAsync(string arquivo, Encoding encoding)

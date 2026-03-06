@@ -2,19 +2,60 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+@section Styles {
+    <link rel="stylesheet" href="~/css/rentabilidade.css" asp-append-version="true" />
+}
+
+<div class="rentabilidade-header">
+    <h1 class="display-4 mb-3">Sistema de Compra Programada de Ações</h1>
+    <p class="lead mb-0">Itaú Corretora</p>
 </div>
 
-<div class="text-center mt-4">
-    <button id="testDbBtn" class="btn btn-primary">Testar conexão com o banco</button>
-    <div id="testDbResult" class="mt-3"></div>
+<div class="rentabilidade-card">
+    <h4 class="card-title">Como Funciona</h4>
+    <p>
+        O sistema de <strong>Compra Programada</strong> permite que você invista mensalmente em uma carteira diversificada de ações, 
+        seguindo a recomendação da <strong>Cesta Top Five</strong> da Itaú Corretora.
+    </p>
+    <ul>
+        <li><strong>Aporte Mensal:</strong> Defina o valor que deseja investir mensalmente (mínimo R$ 100,00)</li>
+        <li><strong>Compras Automáticas:</strong> O sistema executa compras nos dias 5, 15 e 25 de cada mês</li>
+        <li><strong>Diversificação:</strong> Seu investimento é distribuído proporcionalmente entre 5 ações recomendadas</li>
+        <li><strong>Rebalanceamento:</strong> Quando a cesta de recomendação muda, sua carteira é automaticamente ajustada</li>
+        <li><strong>Acompanhamento:</strong> Visualize rentabilidade, P/L e composição da sua carteira a qualquer momento</li>
+    </ul>
 </div>
 
-<div class="text-center mt-4">
-    <button id="importBtn" class="btn btn-success">Importar cotações (COTAHIST)</button>
-    <div id="importResult" class="mt-3"></div>
+<div class="row mt-4">
+    <div class="col-md-4 mb-3">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">📊 Rentabilidade</h5>
+                <p class="card-text">Acompanhe a evolução dos seus investimentos</p>
+                <a class="btn btn-itau" asp-controller="Rentabilidade" asp-action="Index">Ver Rentabilidade</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">🔌 Conexão</h5>
+                <p class="card-text">Teste a conexão com o banco de dados</p>
+                <button id="testDbBtn" class="btn btn-itau">Testar Conexão</button>
+                <div id="testDbResult" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">📈 Cotações</h5>
+                <p class="card-text">Importe dados do arquivo COTAHIST</p>
+                <button id="importBtn" class="btn btn-itau">Importar Cotações</button>
+                <div id="importResult" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script src="~/js/home.js"></script>

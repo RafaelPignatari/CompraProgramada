@@ -38,6 +38,11 @@ namespace CompraProgramadaWebApp.Data.Repositories
             return await _context.Clientes.Where(c => c.Ativo).ToListAsync();
         }
 
+        public async Task<IEnumerable<ClienteViewModel>> GetAllClientesAsync()
+        {
+            return await _context.Clientes.OrderByDescending(c => c.Ativo).ThenBy(c => c.Nome).ToListAsync();
+        }
+
         public Task SaveChangesAsync()
         {
             return _context.SaveChangesAsync();
