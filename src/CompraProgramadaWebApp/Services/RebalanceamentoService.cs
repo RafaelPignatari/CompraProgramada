@@ -1,7 +1,7 @@
 using CompraProgramada.Models;
 using CompraProgramadaWebApp.Data.Repositories;
+using CompraProgramadaWebApp.Helpers;
 using CompraProgramadaWebApp.Models.Enums;
-using System.Text.Json;
 
 namespace CompraProgramadaWebApp.Services
 {
@@ -166,7 +166,7 @@ namespace CompraProgramadaWebApp.Services
                         });
 
                         // RN-053 a RN-056: Publicar IR dedo-duro para compra
-                        await PublicarIRDedoDuroAsync(cliente, ticker, quantidade, cotacaoAtual, "COMPRA");
+                        await IRHelper.PublicarIRDedoDuroAsync(_kafkaProducer, cliente, ticker, quantidade, cotacaoAtual, "COMPRA", DateTime.UtcNow);
                     }
                 }
 
@@ -323,7 +323,7 @@ namespace CompraProgramadaWebApp.Services
                                 DataRebalanceamento = DateTime.UtcNow
                             });
 
-                            await PublicarIRDedoDuroAsync(cliente, ticker, quantidadeComprar, cotacao, "COMPRA");
+                            await IRHelper.PublicarIRDedoDuroAsync(_kafkaProducer, cliente, ticker, quantidadeComprar, cotacao, "COMPRA", DateTime.UtcNow);
                         }
                     }
                 }
@@ -402,7 +402,7 @@ namespace CompraProgramadaWebApp.Services
                         DataRebalanceamento = DateTime.UtcNow
                     });
 
-                    await PublicarIRDedoDuroAsync(cliente, ticker, quantidadeComprar, cotacaoAtual, "COMPRA");
+                    await IRHelper.PublicarIRDedoDuroAsync(_kafkaProducer, cliente, ticker, quantidadeComprar, cotacaoAtual, "COMPRA", DateTime.UtcNow);
                 }
                 else if (quantidadeAlvo < custodia.Quantidade)
                 {
@@ -432,36 +432,6 @@ namespace CompraProgramadaWebApp.Services
                     });
                 }
             }
-        }
-
-        private async Task PublicarIRDedoDuroAsync(
-            ClienteViewModel cliente,
-            string ticker,
-            int quantidade,
-            decimal precoUnitario,
-            string tipoOperacao)
-        {
-            // RN-053 a RN-056: IR Dedo-Duro
-            var valorOperacao = quantidade * precoUnitario;
-            var valorIR = valorOperacao * 0.00005m; // 0.005%
-
-            var mensagem = new
-            {
-                tipo = "IR_DEDO_DURO",
-                clienteId = cliente.Id,
-                cpf = cliente.CPF,
-                ticker = ticker,
-                tipoOperacao = tipoOperacao,
-                quantidade = quantidade,
-                precoUnitario = precoUnitario,
-                valorOperacao = valorOperacao,
-                aliquota = 0.00005m,
-                valorIR = Math.Round(valorIR, 2),
-                dataOperacao = DateTime.UtcNow
-            };
-
-            var json = JsonSerializer.Serialize(mensagem);
-            await _kafkaProducer.PublishAsync("ir-events", json);
         }
 
         private async Task CalcularEPublicarIRVendasAsync(
@@ -501,24 +471,10 @@ namespace CompraProgramadaWebApp.Services
                 return; // Sem lucro, sem IR
             }
 
-            var valorIR = lucroTotal * 0.20m; // 20%
+            var valorIR = IRHelper.CalcularIRVenda(totalVendas, lucroTotal);
+            var mesReferencia = DateTime.UtcNow.ToString("yyyy-MM");
 
-            var mensagem = new
-            {
-                tipo = "IR_VENDA",
-                clienteId = cliente.Id,
-                cpf = cliente.CPF,
-                mesReferencia = DateTime.UtcNow.ToString("yyyy-MM"),
-                totalVendasMes = Math.Round(totalVendas, 2),
-                lucroLiquido = Math.Round(lucroTotal, 2),
-                aliquota = 0.20m,
-                valorIR = Math.Round(valorIR, 2),
-                detalhes = detalhes,
-                dataCalculo = DateTime.UtcNow
-            };
-
-            var json = JsonSerializer.Serialize(mensagem);
-            await _kafkaProducer.PublishAsync("ir-events", json);
+            await IRHelper.PublicarIRVendaAsync(_kafkaProducer, cliente, mesReferencia, totalVendas, lucroTotal, valorIR, detalhes, DateTime.UtcNow);
         }
 
         private class VendaDetalhada

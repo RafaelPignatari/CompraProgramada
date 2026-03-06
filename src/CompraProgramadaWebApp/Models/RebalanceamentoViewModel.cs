@@ -13,12 +13,12 @@ namespace CompraProgramada.Models
         public EnumRebalanceamentoTipo Tipo { get; set; }
 
         [StringLength(10)]
-        public string? TickerVendido { get; set; }
+        public string TickerVendido { get; set; } = string.Empty;
 
         [StringLength(10)]
-        public string? TickerComprado { get; set; }
+        public string TickerComprado { get; set; } = string.Empty;
 
-        public decimal? ValorVenda { get; set; }
+        public decimal? ValorVenda { get; set; } = 0;
 
         public DateTime DataRebalanceamento { get; set; }
     }
