@@ -119,7 +119,7 @@ namespace CompraProgramada.Tests.Unit
             result.OrdensCompra.Should().ContainSingle(o => o.Ticker == "ABC");
             result.Distribuicoes.Should().ContainSingle(d => d.ClienteId == 1);
             // verify kafka publish called at least once
-            kafka.Verify(k => k.PublishAsync("IR_DEDO_DURO", It.IsAny<string>()), Times.AtLeastOnce);
+            kafka.Verify(k => k.PublishAsync("ir-events", It.IsAny<string>()), Times.AtLeastOnce);
         }
 
         [Fact]
@@ -182,7 +182,7 @@ namespace CompraProgramada.Tests.Unit
             // verify distributions for both clients
             result.Distribuicoes.Select(d => d.ClienteId).Should().Contain(new[] { 1L, 2L });
             // kafka published
-            kafka.Verify(k => k.PublishAsync("IR_DEDO_DURO", It.IsAny<string>()), Times.AtLeastOnce);
+            kafka.Verify(k => k.PublishAsync("ir-events", It.IsAny<string>()), Times.AtLeastOnce);
         }
     }
 }

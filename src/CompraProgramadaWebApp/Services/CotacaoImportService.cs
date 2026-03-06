@@ -64,7 +64,7 @@ namespace CompraProgramadaWebApp.Services
 
             if (DateTime.TryParseExact(
                 dataStr,
-                "ddMMyyyy",
+                "yyyyMMdd",
                 System.Globalization.CultureInfo.InvariantCulture,
                 System.Globalization.DateTimeStyles.None,
                 out var data))
