@@ -15,6 +15,7 @@ namespace CompraProgramadaWebApp.Services
         private readonly IOrdemRepository _ordemRepo;
         private readonly IContaGraficaRepository _contaGraficaRepo;
         private readonly ICustodiaRepository _custodiaRepo;
+        private readonly IKafkaProducerService _kafkaProducer;
 
         public CompraProgramadaService(
             IClienteRepository clienteRepo,
@@ -23,7 +24,8 @@ namespace CompraProgramadaWebApp.Services
             IContaMasterRepository contaMasterRepo,
             IOrdemRepository ordemRepo,
             IContaGraficaRepository contaGraficaRepo,
-            ICustodiaRepository custodiaRepo)
+            ICustodiaRepository custodiaRepo,
+            IKafkaProducerService kafkaProducer)
         {
             _clienteRepo = clienteRepo;
             _cestaService = cestaService;
@@ -32,6 +34,7 @@ namespace CompraProgramadaWebApp.Services
             _ordemRepo = ordemRepo;
             _contaGraficaRepo = contaGraficaRepo;
             _custodiaRepo = custodiaRepo;
+            _kafkaProducer = kafkaProducer;
         }
 
         public async Task<CompraProgramadaResultDTO> ExecutarAsync(DateTime? dataRecebida = null)
@@ -286,6 +289,7 @@ namespace CompraProgramadaWebApp.Services
                     };
 
                     await _custodiaRepo.AddAsync(nova);
+                    await PublicarIrCompraAsync(clienteId, conta, ticker, qtd, preco, execDate);
                 }
                 else
                 {
@@ -299,6 +303,7 @@ namespace CompraProgramadaWebApp.Services
                     cust.DataUltimaAtualizacao = execDate;
 
                     await _custodiaRepo.UpdateAsync(cust);
+                    await PublicarIrCompraAsync(clienteId, conta, ticker, qtd, preco, execDate);
                 }
             }
         }
@@ -365,6 +370,45 @@ namespace CompraProgramadaWebApp.Services
             }
 
             return list;
+        }
+
+        private async Task PublicarIrCompraAsync(long clienteId, ContasGraficasViewModel conta, string ticker, int quantidade, decimal precoUnitario, DateTime dataOperacao)
+        {
+            try
+            {
+                if (_kafkaProducer == null)
+                    return;
+
+                var cliente = await _clienteRepo.GetByIdAsync(clienteId);
+                if (cliente == null)
+                    return;
+
+                var valorOperacao = Math.Round(quantidade * precoUnitario, 2);
+                const decimal aliquota = 0.00005m; // 0.005%
+                var valorIr = Math.Round(valorOperacao * aliquota, 2);
+
+                var msg = new
+                {
+                    tipo = "IR_DEDO_DURO",
+                    clienteId = cliente.Id,
+                    cpf = cliente.CPF,
+                    ticker = ticker,
+                    tipoOperacao = "COMPRA",
+                    quantidade = quantidade,
+                    precoUnitario = Math.Round(precoUnitario, 2),
+                    valorOperacao = valorOperacao,
+                    aliquota = aliquota,
+                    valorIR = valorIr,
+                    dataOperacao = dataOperacao.ToString("o")
+                };
+
+                var json = System.Text.Json.JsonSerializer.Serialize(msg);
+                await _kafkaProducer.PublishAsync("IR_DEDO_DURO", json);
+            }
+            catch
+            {
+                // Não propagar exceção para não interromper o fluxo. TODO: Adicionar logs
+            }
         }
     }
 }
