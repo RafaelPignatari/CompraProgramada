@@ -1,6 +1,7 @@
+using CompraProgramadaWebApp.Data.Repositories;
+using CompraProgramadaWebApp.Models.DTOs;
 using System.Linq;
 using System.Threading.Tasks;
-using CompraProgramadaWebApp.Data.Repositories;
 
 namespace CompraProgramadaWebApp.Services
 {
@@ -23,10 +24,12 @@ namespace CompraProgramadaWebApp.Services
                 valorTotalResiduo += c.PrecoMedio * c.Quantidade;
             }
 
-            var contaMaster = new { id = 1, numeroConta = "MST-000001", tipo = "MASTER" };
-            var itens = custodia.Select(c => new { ticker = c.Ticker, quantidade = c.Quantidade, precoMedio = c.PrecoMedio, valorAtual = c.PrecoMedio }).ToArray();
+            var retorno = new CustodiaResponseDTO();
+            retorno.ContaMaster = new { id = 1, numeroConta = "MST-000001", tipo = "MASTER" };
+            retorno.Custodia = custodia.Select(c => new { ticker = c.Ticker, quantidade = c.Quantidade, precoMedio = c.PrecoMedio, valorAtual = c.PrecoMedio }).ToArray();
+            retorno.ValorTotalResiduo = valorTotalResiduo;
 
-            return new { contaMaster, custodia = itens, valorTotalResiduo };
+            return retorno;
         }
     }
 }

@@ -20,6 +20,18 @@ namespace CompraProgramadaWebApp.Controllers.Api
             _env = env;
         }
 
+        /// <summary>
+        /// Importa cotações a partir dos arquivos de cotações localizados na pasta de cotações do projeto.
+        /// </summary>
+        /// <remarks>
+        /// O método localiza o diretório relativo ao ContentRootPath e chama o serviço de importação.
+        /// Retorna o número de registros importados.
+        /// </remarks>
+        /// <returns>Ok(200) com a quantidade importada, NotFound(404) se pasta não existir, BadRequest(400) ou 500 em erros.</returns>
+        /// <response code="200">Importação realizada com sucesso. Retorna quantidade de registros importados.</response>
+        /// <response code="404">Pasta de cotações não encontrada.</response>
+        /// <response code="400">Argumento inválido (ex.: caminho inválido).</response>
+        /// <response code="500">Erro interno ao importar as cotações.</response>
         [HttpPost("importar")]
         public async Task<IActionResult> Importar()
         {

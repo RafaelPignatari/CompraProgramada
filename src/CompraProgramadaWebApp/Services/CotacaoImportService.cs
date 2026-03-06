@@ -21,75 +21,56 @@ namespace CompraProgramadaWebApp.Services
 
         public async Task<int> ImportarAsync(string pastaCotacoes)
         {
-            if (string.IsNullOrWhiteSpace(pastaCotacoes))
-                throw new ArgumentException("Pasta Cotacoes é obrigatória", nameof(pastaCotacoes));
-
-            if (!Directory.Exists(pastaCotacoes))
-                throw new DirectoryNotFoundException($"Pasta não encontrada: {pastaCotacoes}");
+            ValidatePasta(pastaCotacoes);
 
             // Garantir suporte a ISO-8859-1
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             var encoding = Encoding.GetEncoding("ISO-8859-1");
 
-            var ultimoArquivo = Directory.GetFiles(pastaCotacoes, "COTAHIST_D*.TXT")
-                                         .OrderByDescending(f => f)
-                                         .FirstOrDefault();
-
+            var ultimoArquivo = GetUltimoArquivo(pastaCotacoes);
             if (string.IsNullOrEmpty(ultimoArquivo))
                 return 0;
 
-            var totalImportados = 0;
+            var totalImportados = await ProcessFileAsync(ultimoArquivo, encoding);
+            return totalImportados;
+        }
 
-            using var reader = new StreamReader(ultimoArquivo, encoding);
+        private void ValidatePasta(string pastaCotacoes)
+        {
+            if (string.IsNullOrWhiteSpace(pastaCotacoes))
+                throw new ArgumentException("Pasta Cotacoes é obrigatória", nameof(pastaCotacoes));
+
+            if (!Directory.Exists(pastaCotacoes))
+                throw new DirectoryNotFoundException($"Pasta não encontrada: {pastaCotacoes}");
+        }
+
+        private string? GetUltimoArquivo(string pastaCotacoes)
+        {
+            return Directory.GetFiles(pastaCotacoes, "COTAHIST_D*.TXT")
+                            .OrderByDescending(f => f)
+                            .FirstOrDefault();
+        }
+
+        private async Task<int> ProcessFileAsync(string arquivo, Encoding encoding)
+        {
+            var totalImportados = 0;
+            using var reader = new StreamReader(arquivo, encoding);
             string? linha;
             var registrosProcessados = 0;
 
             while ((linha = await reader.ReadLineAsync()) != null)
             {
-                if (linha.Length < 245)
+                var entidade = ProcessLine(linha);
+                if (entidade == null)
                     continue;
-
-                var tipoRegistro = linha.Substring(0, 2);
-                if (tipoRegistro != "01")
-                    continue;
-
-                var codbdi = linha.Substring(10, 2);
-                if (codbdi != "02" && codbdi != "96")
-                    continue;
-
-                var tpmerc = linha.Substring(24, 3);
-                if (tpmerc != "010" && tpmerc != "020")
-                    continue;
-
-                // Extrair campos
-                var dataPregaoStr = linha.Substring(2, 8);
-                if (!DateTime.TryParseExact(dataPregaoStr, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dataPregao))
-                    continue;
-
-                var ticker = linha.Substring(12, 12).Trim();
-
-                var preAbe = ParsePreco(linha.Substring(56, 13));
-                var preMax = ParsePreco(linha.Substring(69, 13));
-                var preMin = ParsePreco(linha.Substring(82, 13));
-                var preUlt = ParsePreco(linha.Substring(108, 13));
 
                 // Evitar duplicados: se já existe cotação para ticker+data, pular
                 var exists = await _db.Cotacoes
                                     .AsNoTracking()
-                                    .AnyAsync(c => c.Ticker == ticker && c.DataPregao == dataPregao);
+                                    .AnyAsync(c => c.Ticker == entidade.Ticker && c.DataPregao == entidade.DataPregao);
 
                 if (exists)
                     continue;
-
-                var entidade = new CotacaoViewModel
-                {
-                    DataPregao = dataPregao,
-                    Ticker = ticker,
-                    PrecoAbertura = preAbe,
-                    PrecoMaximo = preMax,
-                    PrecoMinimo = preMin,
-                    PrecoFechamento = preUlt
-                };
 
                 await _db.Cotacoes.AddAsync(entidade);
                 registrosProcessados++;
@@ -106,6 +87,46 @@ namespace CompraProgramadaWebApp.Services
                 await _db.SaveChangesAsync();
 
             return totalImportados;
+        }
+
+        private CotacaoViewModel? ProcessLine(string? linha)
+        {
+            if (string.IsNullOrEmpty(linha) || linha.Length < 245)
+                return null;
+
+            var tipoRegistro = linha.Substring(0, 2);
+            if (tipoRegistro != "01")
+                return null;
+
+            var codbdi = linha.Substring(10, 2);
+            if (codbdi != "02" && codbdi != "96")
+                return null;
+
+            var tpmerc = linha.Substring(24, 3);
+            if (tpmerc != "010" && tpmerc != "020")
+                return null;
+
+            // Extrair campos
+            var dataPregaoStr = linha.Substring(2, 8);
+            if (!DateTime.TryParseExact(dataPregaoStr, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dataPregao))
+                return null;
+
+            var ticker = linha.Substring(12, 12).Trim();
+
+            var preAbe = ParsePreco(linha.Substring(56, 13));
+            var preMax = ParsePreco(linha.Substring(69, 13));
+            var preMin = ParsePreco(linha.Substring(82, 13));
+            var preUlt = ParsePreco(linha.Substring(108, 13));
+
+            return new CotacaoViewModel
+            {
+                DataPregao = dataPregao,
+                Ticker = ticker,
+                PrecoAbertura = preAbe,
+                PrecoMaximo = preMax,
+                PrecoMinimo = preMin,
+                PrecoFechamento = preUlt
+            };
         }
 
         private decimal? ParsePreco(string s)

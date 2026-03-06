@@ -6,6 +6,9 @@ using CompraProgramadaWebApp.Models.DTOs;
 
 namespace CompraProgramadaWebApp.Controllers.Api.Admin
 {
+    /// <summary>
+    /// Endpoints para gerenciamento das cestas de recomendação (criação, consulta e histórico).
+    /// </summary>
     [ApiController]
     [Route("api/admin/cesta")]
     public class CestaController : ControllerBase
@@ -16,6 +19,13 @@ namespace CompraProgramadaWebApp.Controllers.Api.Admin
             _service = service;
         }
 
+        /// <summary>
+        /// Cria ou atualiza a cesta de recomendação com os itens informados.
+        /// </summary>
+        /// <param name="request">Objeto contendo nome e lista de itens com percentuais.</param>
+        /// <returns>Created(201) com a cesta criada/atualizada ou BadRequest em caso de validação.</returns>
+        /// <response code="201">Cesta criada ou atualizada com sucesso.</response>
+        /// <response code="400">Quantidade de ativos inválida ou percentuais inválidos.</response>
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] CestaRequestDTO? request)
         {
@@ -39,6 +49,13 @@ namespace CompraProgramadaWebApp.Controllers.Api.Admin
             }
         }
 
+        /// <summary>
+        /// Retorna a cesta atualmente ativa.
+        /// </summary>
+        /// <returns>Ok(200) com a cesta atual ou NotFound(404) se não existir.</returns>
+        /// <response code="200">Retorna a cesta atual.</response>
+        /// <response code="404">Nenhuma cesta ativa encontrada.</response>
+        /// <response code="400">Erro ao processar a requisição.</response>
         [HttpGet("atual")]
         public async Task<IActionResult> GetAtual()
         {
@@ -58,6 +75,12 @@ namespace CompraProgramadaWebApp.Controllers.Api.Admin
             }
         }
 
+        /// <summary>
+        /// Retorna o histórico de cestas (listas de cestas já utilizadas/desativadas).
+        /// </summary>
+        /// <returns>Ok(200) com a lista de cestas históricas.</returns>
+        /// <response code="200">Retorna a lista de cestas históricas.</response>
+        /// <response code="400">Erro ao processar a requisição.</response>
         [HttpGet("historico")]
         public async Task<IActionResult> Historico()
         {

@@ -63,25 +63,38 @@ namespace CompraProgramadaWebApp.Services
             if (ordens.Count == 0 && statusTickers.Count == 0)
                 return new CompraProgramadaResultDTO { DataExecucao = dataExecucao, TotalClientes = clientes.Count, TotalConsolidado = totalConsolidado, Mensagem = "Nenhuma ordem gerada." };
 
-            if (ordens.Count > 0)
-            {
-                await _ordemRepo.AddRangeAsync(ordens);
-                await _ordemRepo.SaveChangesAsync();
-            }
+            await SaveOrdensIfAnyAsync(ordens);
 
             var distribuicaoResult = await DistribuirParaContasAsync(statusTickers, clientes, totalConsolidado, dataExecucao);
 
-            // Montar DTO de retorno conforme exemplos
+            return BuildResultado(dataExecucao, clientes.Count, totalConsolidado, ordens, statusTickers, distribuicaoResult);
+        }
+
+        private async Task SaveOrdensIfAnyAsync(List<OrdemCompraViewModel> ordens)
+        {
+            if (ordens == null || ordens.Count == 0)
+                return;
+
+            await _ordemRepo.AddRangeAsync(ordens);
+            await _ordemRepo.SaveChangesAsync();
+        }
+
+        private CompraProgramadaResultDTO BuildResultado(DateTime dataExecucao,
+            int totalClientes,
+            decimal totalConsolidado,
+            List<OrdemCompraViewModel> ordens,
+            Dictionary<string, DetalhesTickerDTO> statusTickers,
+            (List<DistribuicaoClienteDTO> Distribuicoes, List<ResiduoDTO> Residuos, int EventosIRPublicados) distribuicaoResult)
+        {
             var retorno = new CompraProgramadaResultDTO
             {
                 DataExecucao = dataExecucao,
-                TotalClientes = clientes.Count,
+                TotalClientes = totalClientes,
                 TotalConsolidado = totalConsolidado,
                 EventosIRPublicados = distribuicaoResult.EventosIRPublicados,
-                Mensagem = $"Compra programada executada com sucesso para {clientes.Count} clientes."
+                Mensagem = $"Compra programada executada com sucesso para {totalClientes} clientes."
             };
 
-            // Ordens agrupadas por ticker base
             var ordensPorBase = ordens
                 .GroupBy(o => o.Ticker.EndsWith("F") ? o.Ticker.Substring(0, o.Ticker.Length - 1) : o.Ticker)
                 .ToDictionary(g => g.Key, g => g.ToList());
@@ -110,7 +123,6 @@ namespace CompraProgramadaWebApp.Services
                 retorno.OrdensCompra.Add(dtoOrdem);
             }
 
-            // Distribuições por cliente
             retorno.Distribuicoes = distribuicaoResult.Distribuicoes;
             retorno.ResiduosCustMaster = distribuicaoResult.Residuos;
 

@@ -1,4 +1,5 @@
 using CompraProgramadaWebApp.Helpers;
+using CompraProgramadaWebApp.Models.DTOs;
 using CompraProgramadaWebApp.Services;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -17,11 +18,21 @@ namespace CompraProgramadaWebApp.Controllers.Api
             _service = service;
         }
 
+        /// <summary>
+        /// Executa o motor de compra programada para a data informada.
+        /// </summary>
+        /// <param name="request">Objeto contendo a data de referência para execução (campo dataReferencia). Se nulo, usa a data atual.</param>
+        /// <returns>Ok(200) com o resultado da execução ou erros de validação/cesta quando aplicável.</returns>
+        /// <response code="200">Execução realizada com sucesso. Retorna resumo das ordens e distribuições.</response>
+        /// <response code="404">Cesta de recomendação não encontrada.</response>
+        /// <response code="400">Erro de validação (data inválida ou outro erro de negócio).</response>
+        /// <response code="500">Erro interno ao executar o motor de compra programada.</response>
         [HttpPost("executar-compra")]
-        public async Task<IActionResult> Executar([FromQuery] DateTime? data)
+        public async Task<IActionResult> Executar([FromBody] ExecucaoRequestDTO request)
         {
             try
             {
+                var data = request?.DataReferencia;
                 var result = await _service.ExecutarAsync(data);
                 return Ok(result);
             }

@@ -17,6 +17,13 @@ namespace CompraProgramadaWebApp.Controllers.Api
             _service = service;
         }
 
+        /// <summary>
+        /// Realiza adesão de um novo cliente ao serviço de compra programada.
+        /// </summary>
+        /// <param name="model">Dados do cliente (nome, CPF, email e valor mensal).</param>
+        /// <returns>Created (201) com o recurso criado ou BadRequest em caso de erro de validação.</returns>
+        /// <response code="201">Cliente criado com sucesso. Retorna o recurso criado.</response>
+        /// <response code="400">Dados inválidos (CPF duplicado, valor mensal inválido ou erro genérico).</response>
         [HttpPost("adesao")]
         public async Task<IActionResult> Adesao([FromBody] ClienteDTO? model)
         {
@@ -40,6 +47,13 @@ namespace CompraProgramadaWebApp.Controllers.Api
             }
         }
 
+        /// <summary>
+        /// Retorna os dados de um cliente pelo identificador.
+        /// </summary>
+        /// <param name="clienteId">Identificador do cliente.</param>
+        /// <returns>Ok(200) com cliente quando encontrado ou NotFound(404) caso contrário.</returns>
+        /// <response code="200">Cliente encontrado e retornado.</response>
+        /// <response code="404">Cliente não encontrado.</response>
         [HttpGet("{clienteId}")]
         public async Task<IActionResult> GetById(long clienteId)
         {
@@ -51,6 +65,14 @@ namespace CompraProgramadaWebApp.Controllers.Api
             return Ok(cliente);
         }
 
+        /// <summary>
+        /// Marca a saída (encerramento) do cliente do serviço.
+        /// </summary>
+        /// <param name="clienteId">Identificador do cliente a encerrar.</param>
+        /// <returns>Ok(200) com resumo da operação, NotFound ou BadRequest em caso de erro.</returns>
+        /// <response code="200">Saída realizada com sucesso.</response>
+        /// <response code="404">Cliente não encontrado.</response>
+        /// <response code="400">Cliente já inativo ou erro de negócio.</response>
         [HttpPost("{clienteId}/saida")]
         public async Task<IActionResult> Saida(long clienteId)
         {
@@ -70,6 +92,15 @@ namespace CompraProgramadaWebApp.Controllers.Api
             }
         }
 
+        /// <summary>
+        /// Altera o valor mensal do cliente.
+        /// </summary>
+        /// <param name="clienteId">Identificador do cliente.</param>
+        /// <param name="body">Objeto contendo o novo valor mensal.</param>
+        /// <returns>Ok(200) com detalhes da alteração ou NotFound/BadRequest em caso de erro.</returns>
+        /// <response code="200">Valor mensal alterado com sucesso.</response>
+        /// <response code="404">Cliente não encontrado.</response>
+        /// <response code="400">Valor mensal inválido ou erro genérico.</response>
         [HttpPut("{clienteId}/valor-mensal")]
         public async Task<IActionResult> AlterarValorMensal(long clienteId, [FromBody] AlteraValorDTO? body)
         {
